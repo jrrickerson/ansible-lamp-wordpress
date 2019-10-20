@@ -1,7 +1,8 @@
 - hosts: wordpress
+  become: yes
 
   vars:
-    wp_mysql_db: wordpess 
+    wp_mysql_db: wordpress 
     wp_mysql_user: wordpress 
     wp_mysql_password: supersecretpassword
 
@@ -19,10 +20,10 @@
       with_items:
         - apache2
         - mysql-server 
-        - php5-mysql
-        - php5 
-        - libapache2-mod-php5 
-        - php5-mcrypt
+        - php-mysql
+        - php
+        - libapache2-mod-php 
+        - php-mcrypt
         - python-mysqldb
 
       tags:
@@ -32,11 +33,16 @@
       apt: name={{ item }} state=present
       sudo: yes
       with_items:
-        - php5-gd 
-        - libssh2-php
+        - php-gd 
+        - php-ssh2
       tags:
         - install
-
+    - name: Allow hosts to connect
+      shell: sed -i "s/.*bind-address.*/bind-address = 0.0.0.0/" /etc/mysql/mariadb.conf.d/50-server.cnf
+    - name: Start mysql
+      service:
+        name: mysqld
+        state: restarted
     - name: Create mysql database
       mysql_db: 
         name={{ wp_mysql_db }} 
@@ -84,9 +90,9 @@
         regexp="{{ item.regexp }}"
         line="{{ item.line }}"
       with_items:
-        - {'regexp': "define\\('DB_NAME', '(.)+'\\);", 'line': "define('DB_NAME', '{{wp_mysql_db}}');"}        
-        - {'regexp': "define\\('DB_USER', '(.)+'\\);", 'line': "define('DB_USER', '{{wp_mysql_user}}');"}        
-        - {'regexp': "define\\('DB_PASSWORD', '(.)+'\\);", 'line': "define('DB_PASSWORD', '{{wp_mysql_password}}');"}        
+        - {'regexp': "define.*DB_NAME.*", 'line': "define('DB_NAME', '{{wp_mysql_db}}');"}        
+        - {'regexp': "define.*DB_USER.*", 'line': "define('DB_USER', '{{wp_mysql_user}}');"}        
+        - {'regexp': "define.*DB_PASSWORD.*", 'line': "define('DB_PASSWORD', '{{wp_mysql_password}}');"}        
       tags:
         - configure
 
