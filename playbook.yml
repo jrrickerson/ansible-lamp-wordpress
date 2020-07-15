@@ -9,39 +9,37 @@
 
   tasks:
     - name: Update apt cache 
-      apt: update_cache=yes cache_valid_time=3600    
-      sudo: yes
+      apt: 
+        update_cache: yes
+        cache_valid_time: 3600
       tags: 
         - install
 
     - name: Install LAMP
-      apt: name={{ item }} state=present
-      sudo: yes
-      with_items:
+      apt: 
+        pkg:
         - apache2
         - mysql-server 
         - php-mysql
         - php
         - libapache2-mod-php 
-        - php-mcrypt
         - python-mysqldb
-
       tags:
         - install
 
     - name: Install php extensions
-      apt: name={{ item }} state=present
-      sudo: yes
-      with_items:
+      apt: 
+        pkg:
         - php-gd 
         - php-ssh2
       tags:
         - install
+
     - name: Allow hosts to connect
-      shell: sed -i "s/.*bind-address.*/bind-address = 0.0.0.0/" /etc/mysql/mariadb.conf.d/50-server.cnf
+      shell: sed -i "s/.*bind-address.*/bind-address = 0.0.0.0/" /etc/mysql/mysql.conf.d/mysqld.cnf
     - name: Start mysql
       service:
-        name: mysqld
+        name: mysql
         state: restarted
     - name: Create mysql database
       mysql_db: 
